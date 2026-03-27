@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3:45 Marathon Protocol — Personalized Training Plan</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+            zone1: '#60a5fa', zone2: '#4ade80', zone3: '#facc15', zone4: '#fb923c', zone5: '#f87171',
+            base: '#4ade80', build: '#facc15', peak: '#fb923c', taper: '#c084fc',
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            display: ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          borderRadius: { lg: '0.75rem', md: '0.5rem', sm: '0.375rem' },
+        },
+      },
+    }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ═══ SHADCN DESIGN TOKENS ═══ */
+    .dark {
+      --background: 0 0% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 0 0% 5.5%;
+      --card-foreground: 0 0% 98%;
+      --primary: 24 100% 50%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 0 0% 10%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 0 0% 12%;
+      --muted-foreground: 0 0% 55%;
+      --accent: 0 0% 10%;
+      --accent-foreground: 0 0% 98%;
+      --border: 0 0% 12%;
+      --input: 0 0% 12%;
+      --ring: 24 100% 50%;
+    }
+    html { scroll-behavior: smooth; }
+    body { -webkit-font-smoothing: antialiased; }
+    ::selection { background: hsl(24 100% 50%); color: #000; }
+
+    /* ═══ SCROLL PROGRESS BAR — CSS Scroll-Driven Animation ═══ */
+    @supports (animation-timeline: scroll()) {
+      .scroll-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: hsl(24 100% 50%);
+        transform-origin: left;
+        z-index: 9998;
+        animation: scaleProgress linear;
+        animation-timeline: scroll(root);
+      }
+      @keyframes scaleProgress {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+    }
+
+    /* ═══ VIEW-DRIVEN SECTION REVEALS — CSS Scroll-Driven ═══ */
+    @supports (animation-timeline: view()) {
+      .view-reveal {
+        animation: viewFadeSlide linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+      }
+      @keyframes viewFadeSlide {
+        from { opacity: 0; transform: translateY(60px) scale(0.97); filter: blur(4px); }
+        to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+      }
+
+      /* Parallax orbs */
+      .parallax-slow {
+        animation: parallaxSlow linear;
+        animation-timeline: scroll(root);
+      }
+      @keyframes parallaxSlow {
+        from { transform: translateY(0); }
+        to { transform: translateY(-200px); }
+      }
+      .parallax-fast {
+        animation: parallaxFast linear;
+        animation-timeline: scroll(root);
+      }
+      @keyframes parallaxFast {
+        from { transform: translateY(0); }
+        to { transform: translateY(-400px); }
+      }
+      .parallax-mid {
+        animation: parallaxMid linear;
+        animation-timeline: scroll(root);
+      }
+      @keyframes parallaxMid {
+        from { transform: translateY(0); }
+        to { transform: translateY(-300px); }
+      }
+
+      /* Horizontal scroll week - scale-in from view */
+      .view-scale {
+        animation: viewScaleIn linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
+      }
+      @keyframes viewScaleIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      /* SVG path draw on scroll */
+      .draw-path {
+        animation: drawSvg linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 60%;
+      }
+      @keyframes drawSvg {
+        from { stroke-dashoffset: 1000; }
+        to { stroke-dashoffset: 0; }
+      }
+
+      /* Background hue shift */
+      .hue-shift-bg {
+        animation: hueShift linear;
+        animation-timeline: scroll(root);
+      }
+      @keyframes hueShift {
+        0% { filter: hue-rotate(0deg); }
+        50% { filter: hue-rotate(15deg); }
+        100% { filter: hue-rotate(-5deg); }
+      }
+
+      /* Timeline line draw */
+      .timeline-draw {
+        animation: timelineDraw linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 90%;
+      }
+      @keyframes timelineDraw {
+        from { height: 0%; }
+        to { height: 100%; }
+      }
+    }
+
+    /* ═══ JS FALLBACK REVEALS (for non-supporting browsers) ═══ */
+    @supports not (animation-timeline: view()) {
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+      }
+      [data-reveal].visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ═══ STAGGER CHILDREN ═══ */
+    [data-stagger] > * {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    [data-stagger].visible > * { opacity: 1; transform: translateY(0); }
+    [data-stagger].visible > *:nth-child(1) { transition-delay: 0.05s; }
+    [data-stagger].visible > *:nth-child(2) { transition-delay: 0.1s; }
+    [data-stagger].visible > *:nth-child(3) { transition-delay: 0.12s; }
+    [data-stagger].visible > *:nth-child(4) { transition-delay: 0.16s; }
+    [data-stagger].visible > *:nth-child(5) { transition-delay: 0.2s; }
+    [data-stagger].visible > *:nth-child(6) { transition-delay: 0.24s; }
+    [data-stagger].visible > *:nth-child(7) { transition-delay: 0.28s; }
+
+    /* ═══ HERO TEXT SPLIT ANIMATION ═══ */
+    .char-reveal {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(100%) rotateX(-80deg);
+      animation: charIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes charIn {
+      to { opacity: 1; transform: translateY(0) rotateX(0deg); }
+    }
+
+    /* ═══ COUNTER ANIMATION ═══ */
+    .counter { font-variant-numeric: tabular-nums; }
+
+    /* ═══ NOISE TEXTURE ═══ */
+    .noise::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px;
+    }
+
+    /* ═══ ZONE BAR ANIMATION ═══ */
+    .zone-fill { width: 0; transition: width 1.4s cubic-bezier(0.16,1,0.3,1); }
+    .zone-fill.animated { width: var(--w); }
+
+    /* ═══ CHART BAR ANIMATION ═══ */
+    .chart-col { height: 4px; transition: height 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .chart-col.animated { height: var(--h); }
+
+    /* ═══ MARQUEE ═══ */
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 40s linear infinite;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ═══ CARD GLOW (mouse follow) ═══ */
+    .card-glow { position: relative; overflow: hidden; }
+    .card-glow::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(255,120,40,0.06), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .card-glow:hover::before { opacity: 1; }
+    .card-glow > * { position: relative; z-index: 1; }
+
+    /* ═══ BADGE ═══ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      padding: 0.125rem 0.625rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid transparent;
+    }
+
+    /* ═══ GRADIENT BORDER ═══ */
+    .gradient-border { position: relative; }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, hsl(24 100% 50% / 0.3), transparent 50%, hsl(200 90% 50% / 0.2));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* ═══ HORIZONTAL SCROLL SNAP ═══ */
+    .h-scroll {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .h-scroll::-webkit-scrollbar { display: none; }
+    .h-scroll > * { scroll-snap-align: start; flex-shrink: 0; }
+
+    /* ═══ SCROLLBAR ═══ */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: hsl(0 0% 3.9%); }
+    ::-webkit-scrollbar-thumb { background: hsl(24 100% 50% / 0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: hsl(24 100% 50% / 0.45); }
+
+    /* ═══ PULSE RING ═══ */
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    /* ═══ FLOAT ═══ */
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(25px, -35px) scale(1.04); }
+      66% { transform: translate(-15px, 20px) scale(0.96); }
+    }
+
+    /* ═══ SECTION NUMBER ANIMATION ═══ */
+    .section-num {
+      display: inline-flex;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid hsl(24 100% 50% / 0.3);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: hsl(24 100% 50%);
+      font-weight: 600;
+    }
+
+    /* ═══ CLIP PATH WIPE REVEAL ═══ */
+    @supports (animation-timeline: view()) {
+      .wipe-reveal {
+        animation: clipWipe linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
+      }
+      @keyframes clipWipe {
+        from { clip-path: inset(0 100% 0 0); }
+        to { clip-path: inset(0 0% 0 0); }
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       READING MODE — Dark Paper / Research Journal
+       ═══════════════════════════════════════════════════════ */
+
+    /* Toggle button */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--secondary));
+      color: hsl(var(--muted-foreground));
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .mode-toggle:hover {
+      border-color: hsl(var(--primary) / 0.4);
+      color: hsl(var(--foreground));
+    }
+    .mode-toggle .icon-dashboard,
+    .mode-toggle .icon-reader { display: none; }
+    .mode-toggle .icon-reader { display: inline; }
+    body.reader .mode-toggle .icon-reader { display: none; }
+    body.reader .mode-toggle .icon-dashboard { display: inline; }
+
+    /* ── READING MODE DESIGN TOKENS ── */
+    body.reader {
+      --background: 30 12% 6.5%;
+      --foreground: 38 25% 80%;
+      --card: 30 10% 8.5%;
+      --card-foreground: 38 25% 80%;
+      --secondary: 30 9% 11%;
+      --secondary-foreground: 38 25% 80%;
+      --muted: 30 7% 13%;
+      --muted-foreground: 32 12% 44%;
+      --border: 30 7% 13%;
+      --primary: 34 55% 45%;
+    }
+
+    /* Paper texture — heavier, warmer grain like aged stock */
+    body.reader.noise::after {
+      opacity: 0.055;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 512px;
+      mix-blend-mode: soft-light;
+    }
+
+    /* Second paper layer: subtle fiber texture */
+    body.reader::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+      opacity: 0.018;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.015 0.08' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+      background-size: 400px;
+    }
+
+    /* Scroll progress — warm, understated */
+    body.reader .scroll-progress {
+      background: hsl(34 55% 45%);
+      height: 2px;
+    }
+
+    /* ── TYPOGRAPHY: True book typesetting ── */
+    body.reader {
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif !important;
+      font-size: 19px;
+      line-height: 1.85;
+      letter-spacing: 0.008em;
+      word-spacing: 0.04em;
+      font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 1, 'calt' 1;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: auto;
+      font-optical-sizing: auto;
+    }
+    body.reader ::selection {
+      background: hsl(34 55% 45% / 0.3);
+      color: hsl(38 30% 92%);
+    }
+    body.reader ::-webkit-scrollbar-thumb {
+      background: hsl(34 55% 45% / 0.15);
+    }
+
+    /* Body text: generous, airy, comfortable */
+    body.reader p,
+    body.reader .text-sm,
+    body.reader .text-xs {
+      font-family: 'EB Garamond', 'Georgia', serif !important;
+      font-size: 1.05rem !important;
+      line-height: 1.85 !important;
+      letter-spacing: 0.01em;
+      color: hsl(38 20% 72%) !important;
+    }
+
+    /* Headings: Cormorant — light, calligraphic, classical */
+    body.reader .font-display,
+    body.reader h1, body.reader h2, body.reader h3, body.reader h4 {
+      font-family: 'Cormorant Garamond', 'Garamond', serif !important;
+      font-weight: 400 !important;
+      letter-spacing: 0.02em;
+      color: hsl(38 25% 82%) !important;
+    }
+    body.reader h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem) !important;
+      line-height: 1.25 !important;
+      margin-bottom: 0.6em;
+      font-weight: 300 !important;
+    }
+    body.reader h3 {
+      font-size: 1.35rem !important;
+      font-weight: 400 !important;
+    }
+
+    /* Data values: EB Garamond with oldstyle numerals */
+    body.reader .font-display.font-700,
+    body.reader .font-display.font-700.text-lg,
+    body.reader .font-display.font-700.text-xl {
+      font-family: 'EB Garamond', serif !important;
+      font-weight: 500 !important;
+      font-feature-settings: 'onum' 1, 'liga' 1;
+    }
+
+    /* Monospace: smaller, softer, blends into the page */
+    body.reader .font-mono {
+      font-family: 'EB Garamond', serif !important;
+      font-size: 0.88em;
+      font-variant: small-caps;
+      letter-spacing: 0.06em;
+      opacity: 0.55;
+      text-transform: lowercase;
+    }
+    /* Keep actual data labels in proper case */
+    body.reader .font-mono.text-\\[0\\.5rem\\],
+    body.reader .font-mono.text-\\[0\\.55rem\\],
+    body.reader .font-mono.text-\\[0\\.6rem\\] {
+      font-size: 0.78rem !important;
+      letter-spacing: 0.08em;
+      opacity: 0.45;
+    }
+
+    /* ── LAYOUT: Narrow reading column ── */
+    body.reader .max-w-6xl {
+      max-width: 680px !important;
+    }
+
+    /* ── NAV: Minimal, library-like ── */
+    body.reader #navbar {
+      background: hsl(30 12% 6.5% / 0.94) !important;
+      border-bottom-color: hsl(30 7% 13%) !important;
+    }
+    body.reader #navbar .font-display {
+      font-family: 'Cormorant Garamond', serif !important;
+      font-style: italic;
+      font-weight: 400 !important;
+      font-size: 1rem !important;
+      letter-spacing: 0.04em;
+    }
+    body.reader #navbar a {
+      font-family: 'EB Garamond', serif !important;
+      font-variant: small-caps;
+      text-transform: lowercase;
+      letter-spacing: 0.06em;
+      font-size: 0.8rem !important;
+    }
+
+    /* ── HERO: Becomes a title page ── */
+    body.reader .hero-bg-hide,
+    body.reader .parallax-slow,
+    body.reader .parallax-fast,
+    body.reader .parallax-mid,
+    body.reader .marquee-track { display: none !important; }
+
+    /* Hide the grid overlay in hero */
+    body.reader section:first-of-type > div:first-child {
+      display: none !important;
+    }
+
+    body.reader section:first-of-type {
+      min-height: auto !important;
+      padding-top: 10rem;
+      padding-bottom: 5rem;
+      text-align: center;
+    }
+
+    body.reader #heroTime {
+      font-family: 'Cormorant Garamond', serif !important;
+      font-weight: 300 !important;
+      font-style: italic;
+      letter-spacing: 0.04em;
+    }
+    body.reader #heroTime .char-reveal {
+      font-family: 'Cormorant Garamond', serif !important;
+    }
+    body.reader section:first-of-type h1 {
+      font-size: clamp(3.5rem, 8vw, 6rem) !important;
+      margin-bottom: 0.4em;
+      font-weight: 300 !important;
+    }
+    /* Title page rule line */
+    body.reader section:first-of-type h1::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 1px;
+      background: hsl(34 55% 45% / 0.4);
+      margin: 1.5rem auto 0;
+    }
+    body.reader #heroSub {
+      font-family: 'EB Garamond', serif !important;
+      font-style: italic;
+      font-size: 1.15rem !important;
+      max-width: 420px !important;
+      margin: 0 auto 2.5rem;
+      color: hsl(32 12% 50%) !important;
+      line-height: 1.8;
+      letter-spacing: 0.01em;
+    }
+
+    /* Stats become a clean table */
+    body.reader section:first-of-type .grid {
+      max-width: 520px !important;
+      margin: 0 auto;
+      border-radius: 0 !important;
+      border: none !important;
+      gap: 0 !important;
+      background: transparent !important;
+      border-top: 1px solid hsl(30 6% 18%);
+      border-bottom: 1px solid hsl(30 6% 18%);
+    }
+    body.reader section:first-of-type .grid > div {
+      background: transparent !important;
+      border-bottom: none;
+      padding: 1rem 1.25rem;
+    }
+
+    /* ── SVG ROUTE: Soften ── */
+    body.reader svg { opacity: 0.15 !important; }
+
+    /* ── MARQUEE: Hidden ── */
+    body.reader .border-y.border-border {
+      display: none;
+    }
+
+    /* ── SECTIONS: Proper chapter spacing ── */
+    body.reader section {
+      padding-top: 4rem !important;
+      padding-bottom: 4rem !important;
+    }
+
+    /* Section numbers become chapter markers */
+    body.reader .section-num {
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      border: none;
+      font-family: 'Cormorant Garamond', serif !important;
+      font-size: 1rem;
+      font-style: italic;
+      font-weight: 400;
+      color: hsl(34 55% 45%);
+      padding: 0;
+      letter-spacing: 0.05em;
+    }
+
+    /* Dividers: elegant fleuron / ornamental break */
+    body.reader .bg-gradient-to-r {
+      height: auto !important;
+      background: none !important;
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+    body.reader .bg-gradient-to-r::before {
+      content: '❧';
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      color: hsl(32 12% 25%);
+      display: block;
+    }
+
+    /* ── CARDS: Become paragraphs with subtle separation ── */
+    body.reader .card-glow,
+    body.reader .rounded-lg.border.border-border.bg-card {
+      border-radius: 0 !important;
+      border: none !important;
+      border-bottom: 1px solid hsl(30 6% 14%) !important;
+      background: transparent !important;
+      padding: 1.5rem 0 !important;
+    }
+    body.reader .card-glow::before { display: none; }
+    body.reader .card-glow:last-child,
+    body.reader .rounded-lg.border.border-border.bg-card:last-child {
+      border-bottom: none !important;
+    }
+
+    /* Assessment cards stack nicely */
+    body.reader .grid.sm\\:grid-cols-2 {
+      grid-template-columns: 1fr !important;
+      gap: 0 !important;
+    }
+
+    /* Badges become elegant italic labels */
+    body.reader .badge {
+      border-radius: 0;
+      padding: 0;
+      background: none !important;
+      border: none !important;
+      font-family: 'EB Garamond', serif !important;
+      font-style: italic;
+      font-size: 0.95rem;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-weight: 400;
+    }
+
+    /* ── ZONE BARS: Simplified ── */
+    body.reader #zoneBars .flex.items-center.gap-4 {
+      gap: 0.75rem;
+    }
+    body.reader .zone-fill {
+      border-radius: 0 !important;
+      opacity: 0.6;
+    }
+    body.reader .gradient-border::before { display: none; }
+
+    /* ── GRID DATA PANELS: Flatten ── */
+    body.reader .grid.grid-cols-2.md\\:grid-cols-4,
+    body.reader .grid-cols-2.md\\:grid-cols-4 {
+      grid-template-columns: 1fr 1fr !important;
+      border-radius: 0 !important;
+      border: 1px solid hsl(30 6% 14%) !important;
+      gap: 0 !important;
+      background: hsl(30 6% 14%) !important;
+    }
+    body.reader .grid-cols-2.md\\:grid-cols-4 > div {
+      background: hsl(30 10% 7%) !important;
+    }
+
+    /* ── MILEAGE CHART: Softer tones ── */
+    body.reader .chart-col {
+      opacity: 0.7;
+      border-radius: 0 !important;
+    }
+
+    /* ── HORIZONTAL SCROLL: Becomes vertical ── */
+    body.reader .h-scroll {
+      flex-wrap: wrap !important;
+      overflow: visible !important;
+      scroll-snap-type: none !important;
+      gap: 0 !important;
+    }
+    body.reader .h-scroll > * {
+      width: 100% !important;
+      flex-shrink: 1 !important;
+      border-radius: 0 !important;
+      border-left: none !important;
+      border-right: none !important;
+      min-height: auto !important;
+      padding: 1.25rem 0 !important;
+      border-bottom: 1px solid hsl(30 6% 14%) !important;
+    }
+    body.reader .h-scroll > *:last-child {
+      border-bottom: none !important;
+    }
+    /* Hide swipe indicator */
+    body.reader .h-scroll + div { display: none; }
+
+    /* ── STRENGTH PRINCIPLES: Soften ── */
+    body.reader .border-l-2 {
+      border-left-color: hsl(32 70% 48% / 0.3) !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+      padding: 0.75rem 0 0.75rem 1.25rem !important;
+    }
+
+    /* ── ADAPTIVE RULES: Pull quotes / marginalia ── */
+    body.reader .rounded-md.bg-primary\\/5 {
+      background: transparent !important;
+      border-color: transparent !important;
+      border-left: 2px solid hsl(34 55% 45% / 0.25) !important;
+      border-radius: 0 !important;
+      padding-left: 1rem !important;
+      margin-top: 0.75rem;
+    }
+    body.reader .rounded-md.bg-primary\\/5 p {
+      font-family: 'EB Garamond', serif !important;
+      font-style: italic !important;
+      font-size: 0.95rem !important;
+      color: hsl(34 55% 45%) !important;
+    }
+    body.reader .w-10.h-10 {
+      display: none;
+    }
+
+    /* ── STRENGTH PRINCIPLES in reader ── */
+    body.reader .border-l-2.border-l-primary {
+      border-left-color: hsl(34 55% 45% / 0.2) !important;
+    }
+
+    /* ── SUMMARY: Academic feel ── */
+    body.reader .gradient-border {
+      border-radius: 0 !important;
+    }
+    body.reader .gradient-border::before { display: none; }
+    body.reader .gradient-border > div {
+      background: transparent !important;
+      border-top: 2px solid hsl(32 70% 48% / 0.3);
+      border-bottom: 1px solid hsl(30 6% 14%);
+      border-radius: 0 !important;
+      padding: 2.5rem 0 !important;
+    }
+
+    /* Summary numbers — elegant chapter numerals */
+    body.reader .font-display.font-800.text-3xl {
+      font-family: 'Cormorant Garamond', serif !important;
+      font-weight: 300 !important;
+      font-style: italic;
+      opacity: 0.2;
+      font-size: 2.5rem !important;
+    }
+
+    /* ── LG GRID OVERRIDES: Single column in reading ── */
+    body.reader .grid.lg\\:grid-cols-2,
+    body.reader .grid.lg\\:grid-cols-5 {
+      grid-template-columns: 1fr !important;
+    }
+    body.reader .lg\\:col-span-3,
+    body.reader .lg\\:col-span-2 {
+      grid-column: span 1 !important;
+    }
+
+    /* ── TIMELINE: Refined line ── */
+    body.reader .relative.pl-10,
+    body.reader .relative.md\\:pl-12 {
+      padding-left: 2rem !important;
+    }
+    body.reader .absolute.left-4,
+    body.reader .absolute.left-5 {
+      left: 0 !important;
+    }
+    body.reader .timeline-draw {
+      opacity: 0.4;
+    }
+    body.reader .shadow-\\[0_0_16px {
+      box-shadow: none !important;
+    }
+
+    /* Remove all glow shadows */
+    body.reader [class*="shadow-[0_0"] {
+      box-shadow: none !important;
+    }
+
+    /* ── FOOTER: Minimal ── */
+    body.reader footer {
+      text-align: center;
+      padding: 3rem 0;
+    }
+    body.reader footer .flex {
+      justify-content: center !important;
+    }
+
+    /* ── SMOOTH TRANSITION between modes ── */
+    body {
+      transition: background-color 0.6s ease, color 0.5s ease;
+    }
+    body * {
+      transition: background-color 0.4s ease, border-color 0.4s ease, color 0.3s ease;
+    }
+    /* Exclude animations from mode transition */
+    body .char-reveal,
+    body .zone-fill,
+    body .chart-col,
+    body .marquee-track {
+      transition: none;
+    }
+
+    /* ── READING PROGRESS: Chapter footer ── */
+    body.reader .reading-chapter {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: hsl(32 12% 38%);
+      padding: 0.5rem 1.5rem;
+      background: hsl(30 12% 6.5% / 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid hsl(30 7% 15%);
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.6s;
+      pointer-events: none;
+    }
+    body.reader .reading-chapter.visible {
+      opacity: 1;
+    }
+
+    /* ── FOOTER in reader ── */
+    body.reader footer {
+      border-top-color: hsl(30 7% 13%) !important;
+    }
+    body.reader footer span,
+    body.reader footer a {
+      font-family: 'EB Garamond', serif !important;
+      font-variant: small-caps;
+      text-transform: lowercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── HIDE LUCIDE ICONS in reader (cleaner) ── */
+    body.reader [data-lucide] {
+      opacity: 0.25;
+      width: 14px !important;
+      height: 14px !important;
+    }
+    body.reader .card-glow [data-lucide],
+    body.reader .w-8 [data-lucide] {
+      opacity: 0.35;
+    }
+
+    /* ── ZONE COLORS softer in reader ── */
+    body.reader .text-zone2,
+    body.reader .text-zone3,
+    body.reader .text-zone5,
+    body.reader .text-sky-400,
+    body.reader .text-taper {
+      opacity: 0.75;
+    }
+
+    /* ── GRID DATA PANELS fix ── */
+    body.reader .grid-cols-2.md\\:grid-cols-4 > div {
+      background: hsl(30 12% 6.5%) !important;
+    }
+    body.reader .grid.grid-cols-2.md\\:grid-cols-4 {
+      background: hsl(30 7% 13%) !important;
+    }
+  </style>
+</head>
+<body class="noise bg-background text-foreground font-sans antialiased overflow-x-hidden">
+
+  <!-- ═══ SCROLL PROGRESS BAR ═══ -->
+  <div class="scroll-progress"></div>
+
+  <!-- ═══ NAV ═══ -->
+  <nav id="navbar" class="fixed top-0 inset-x-0 z-50 transition-transform duration-500" style="backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:hsl(0 0% 3.9%/0.85)">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between border-b border-border">
+      <a href="#" class="flex items-center gap-2.5 text-foreground no-underline">
+        <div class="relative">
+          <div class="w-2 h-2 rounded-full bg-primary"></div>
+          <div class="absolute inset-0 w-2 h-2 rounded-full bg-primary" style="animation:pulseRing 2s ease-out infinite"></div>
+        </div>
+        <span class="font-display font-800 text-sm tracking-tight">3:45 PROTOCOL</span>
+      </a>
+      <div class="hidden md:flex items-center gap-1">
+        <a href="#assessment" class="px-3 py-1.5 rounded-md text-[0.65rem] font-mono text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">Assessment</a>
+        <a href="#zones" class="px-3 py-1.5 rounded-md text-[0.65rem] font-mono text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">HR Zones</a>
+        <a href="#phases" class="px-3 py-1.5 rounded-md text-[0.65rem] font-mono text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">Phases</a>
+        <a href="#strength" class="px-3 py-1.5 rounded-md text-[0.65rem] font-mono text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">Strength</a>
+        <a href="#rules" class="px-3 py-1.5 rounded-md text-[0.65rem] font-mono text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">Adapt</a>
+        <div class="w-px h-4 bg-border mx-1"></div>
+        <button id="modeToggle" class="mode-toggle" onclick="toggleReadingMode()">
+          <span class="icon-reader"><i data-lucide="book-open" class="w-3 h-3"></i></span>
+          <span class="icon-dashboard"><i data-lucide="layout-dashboard" class="w-3 h-3"></i></span>
+          <span class="toggle-label">Read</span>
+        </button>
+      </div>
+      <!-- Mobile toggle -->
+      <button id="modeToggleMobile" class="mode-toggle md:hidden" onclick="toggleReadingMode()">
+        <span class="icon-reader"><i data-lucide="book-open" class="w-3 h-3"></i></span>
+        <span class="icon-dashboard"><i data-lucide="layout-dashboard" class="w-3 h-3"></i></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Reading mode chapter indicator -->
+  <div id="chapterIndicator" class="reading-chapter"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════ -->
+  <section class="relative min-h-screen flex items-center pt-20 pb-16 overflow-hidden" id="top">
+    <!-- Background orbs with parallax -->
+    <div class="absolute inset-0 pointer-events-none hue-shift-bg">
+      <div class="parallax-slow absolute top-[-15%] right-[-8%] w-[500px] h-[500px] rounded-full opacity-20" style="background:radial-gradient(circle,hsl(24 100% 50%),transparent 70%);animation:floatOrb 20s ease-in-out infinite"></div>
+      <div class="parallax-fast absolute bottom-[-5%] left-[-3%] w-[350px] h-[350px] rounded-full opacity-12" style="background:radial-gradient(circle,hsl(200 90% 50%),transparent 70%);animation:floatOrb 25s ease-in-out infinite;animation-delay:-8s"></div>
+      <div class="parallax-mid absolute top-[35%] left-[30%] w-[250px] h-[250px] rounded-full opacity-8" style="background:radial-gradient(circle,hsl(270 80% 65%),transparent 70%);animation:floatOrb 22s ease-in-out infinite;animation-delay:-14s"></div>
+      <!-- Grid overlay -->
+      <div class="absolute inset-0" style="background-image:linear-gradient(hsl(0 0% 100%/0.015) 1px,transparent 1px),linear-gradient(90deg,hsl(0 0% 100%/0.015) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 60% 55% at 50% 45%,black,transparent)"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10 w-full">
+      <!-- Eyebrow -->
+      <div class="flex items-center gap-3 mb-6 view-reveal">
+        <div class="h-px w-8 bg-primary"></div>
+        <span class="badge bg-primary/10 text-primary border-primary/20">Personalized Marathon Protocol</span>
+      </div>
+
+      <!-- Title — characters split-animated via JS -->
+      <h1 class="font-display font-800 leading-[0.88] tracking-tight mb-4" style="font-size:clamp(3.5rem,9vw,8rem);perspective:600px">
+        <span id="heroTime" class="text-primary inline-block relative" style="overflow:hidden"></span>
+      </h1>
+      <p id="heroSub" class="text-muted-foreground font-display font-600 leading-snug mb-8" style="font-size:clamp(1.1rem,2.5vw,1.6rem);letter-spacing:-0.01em;max-width:520px"></p>
+
+      <!-- Animated SVG running route -->
+      <div class="mb-10 view-reveal" style="max-width:500px;opacity:0.35">
+        <svg viewBox="0 0 500 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+          <path class="draw-path" d="M0 30 Q60 5, 120 30 T240 30 T360 30 T480 20 L500 22" stroke="hsl(24,100%,50%)" stroke-width="2" stroke-linecap="round" stroke-dasharray="1000" stroke-dashoffset="1000" />
+          <path class="draw-path" d="M0 40 Q80 55, 150 35 T300 40 T420 35 L500 38" stroke="hsl(200,90%,50%)" stroke-width="1" stroke-linecap="round" stroke-dasharray="1000" stroke-dashoffset="1000" style="animation-delay:0.3s" />
+        </svg>
+      </div>
+
+      <!-- Stats with counter animation -->
+      <div data-stagger class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border max-w-[700px]">
+        <div class="bg-card p-5 hover:bg-secondary transition-colors group">
+          <div class="flex items-center gap-1.5 mb-2 text-muted-foreground">
+            <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+            <span class="font-mono text-[0.55rem] tracking-widest uppercase">Target Pace</span>
+          </div>
+          <div class="font-display font-700 text-xl text-primary tracking-tight">
+            <span class="counter" data-target="8" data-suffix=":35" data-duration="1200">0</span><span class="text-muted-foreground text-xs ml-0.5">/mi</span>
+          </div>
+        </div>
+        <div class="bg-card p-5 hover:bg-secondary transition-colors">
+          <div class="flex items-center gap-1.5 mb-2 text-muted-foreground">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i>
+            <span class="font-mono text-[0.55rem] tracking-widest uppercase">VO2 Max</span>
+          </div>
+          <div class="font-display font-700 text-xl tracking-tight" style="color:#00b4d8">
+            <span class="counter" data-target="51.6" data-decimals="1" data-duration="1400">0</span>
+          </div>
+        </div>
+        <div class="bg-card p-5 hover:bg-secondary transition-colors">
+          <div class="flex items-center gap-1.5 mb-2 text-muted-foreground">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+            <span class="font-mono text-[0.55rem] tracking-widest uppercase">Peak Volume</span>
+          </div>
+          <div class="font-display font-700 text-xl tracking-tight">
+            <span class="counter" data-target="30" data-duration="1600">0</span><span class="text-muted-foreground text-xs ml-1">mi/wk</span>
+          </div>
+        </div>
+        <div class="bg-card p-5 hover:bg-secondary transition-colors">
+          <div class="flex items-center gap-1.5 mb-2 text-muted-foreground">
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            <span class="font-mono text-[0.55rem] tracking-widest uppercase">Race Day</span>
+          </div>
+          <div class="font-display font-700 text-xl tracking-tight">Jul 26</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MARQUEE ═══ -->
+  <div class="border-y border-border bg-card/50 py-4 overflow-hidden">
+    <div class="marquee-track">
+      <span class="flex items-center gap-6 px-4 text-muted-foreground/30 font-display font-700 text-lg tracking-tight whitespace-nowrap select-none">
+        <span>BASE BUILDING</span><span class="text-primary/20 text-sm">///</span>
+        <span>TEMPO RUNS</span><span class="text-primary/20 text-sm">///</span>
+        <span>HR ZONE TRAINING</span><span class="text-primary/20 text-sm">///</span>
+        <span>PROGRESSIVE OVERLOAD</span><span class="text-primary/20 text-sm">///</span>
+        <span>MARATHON PACE</span><span class="text-primary/20 text-sm">///</span>
+        <span>RECOVERY ADAPTATION</span><span class="text-primary/20 text-sm">///</span>
+        <span>STRENGTH INTEGRATION</span><span class="text-primary/20 text-sm">///</span>
+      </span>
+      <span class="flex items-center gap-6 px-4 text-muted-foreground/30 font-display font-700 text-lg tracking-tight whitespace-nowrap select-none">
+        <span>BASE BUILDING</span><span class="text-primary/20 text-sm">///</span>
+        <span>TEMPO RUNS</span><span class="text-primary/20 text-sm">///</span>
+        <span>HR ZONE TRAINING</span><span class="text-primary/20 text-sm">///</span>
+        <span>PROGRESSIVE OVERLOAD</span><span class="text-primary/20 text-sm">///</span>
+        <span>MARATHON PACE</span><span class="text-primary/20 text-sm">///</span>
+        <span>RECOVERY ADAPTATION</span><span class="text-primary/20 text-sm">///</span>
+        <span>STRENGTH INTEGRATION</span><span class="text-primary/20 text-sm">///</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       ASSESSMENT
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="assessment">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">01</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Athlete Assessment</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">Where You Stand</h2>
+        <p class="text-muted-foreground mt-4 max-w-xl leading-relaxed">Your Garmin data reveals a strong physiological ceiling but a massive endurance gap. The limiter isn't talent — it's training volume.</p>
+      </div>
+
+      <div data-stagger class="grid sm:grid-cols-2 gap-4">
+        <div class="card-glow rounded-lg border border-border bg-card p-6 hover:border-sky-500/20 transition-colors group">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-md bg-sky-500/10 flex items-center justify-center"><i data-lucide="zap" class="w-4 h-4 text-sky-400"></i></div>
+            <span class="badge bg-sky-500/10 text-sky-400 border-sky-500/20">Potential</span>
+          </div>
+          <h3 class="font-display font-700 text-base mb-2">Raw Physiological Capacity</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed">VO2max of 51.6 can support a 3:30–3:45 marathon — once the aerobic base catches up to your engine.</p>
+          <div class="flex items-baseline gap-2 mt-5 pt-4 border-t border-border">
+            <span class="font-display font-800 text-2xl tracking-tight text-sky-400 counter" data-target="3" data-suffix=":30–3:45" data-duration="1000">0</span>
+            <span class="font-mono text-[0.55rem] text-muted-foreground uppercase tracking-wider">potential range</span>
+          </div>
+        </div>
+
+        <div class="card-glow rounded-lg border border-border bg-card p-6 hover:border-red-500/20 transition-colors group">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-md bg-red-500/10 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i></div>
+            <span class="badge bg-red-500/10 text-red-400 border-red-500/20">Critical Gap</span>
+          </div>
+          <h3 class="font-display font-700 text-base mb-2">Weekly Mileage at ~9 mi/wk</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed">Marathon demands 30–40+ mi/wk. At 9 mi/wk with 2 runs, your current base predicts a marathon well over 4:00.</p>
+          <div class="flex items-baseline gap-2 mt-5 pt-4 border-t border-border">
+            <span class="font-display font-800 text-2xl tracking-tight text-red-400">~<span class="counter" data-target="9" data-duration="800">0</span></span>
+            <span class="font-mono text-[0.55rem] text-muted-foreground uppercase tracking-wider">mi/week current</span>
+          </div>
+        </div>
+
+        <div class="card-glow rounded-lg border border-border bg-card p-6 hover:border-green-500/20 transition-colors group">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-md bg-green-500/10 flex items-center justify-center"><i data-lucide="dumbbell" class="w-4 h-4 text-green-400"></i></div>
+            <span class="badge bg-green-500/10 text-green-400 border-green-500/20">Strength</span>
+          </div>
+          <h3 class="font-display font-700 text-base mb-2">Gym Consistency is Exceptional</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed">5–6 sessions/week shows discipline. We'll redirect: reduce to 2–3 sessions optimized for running economy.</p>
+          <div class="flex items-baseline gap-2 mt-5 pt-4 border-t border-border">
+            <span class="font-display font-800 text-2xl tracking-tight text-green-400"><span class="counter" data-target="5" data-suffix="–6x" data-duration="900">0</span></span>
+            <span class="font-mono text-[0.55rem] text-muted-foreground uppercase tracking-wider">sessions/week</span>
+          </div>
+        </div>
+
+        <div class="card-glow rounded-lg border border-border bg-card p-6 hover:border-primary/20 transition-colors group">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center"><i data-lucide="target" class="w-4 h-4 text-primary"></i></div>
+            <span class="badge bg-primary/10 text-primary border-primary/20">Strategy</span>
+          </div>
+          <h3 class="font-display font-700 text-base mb-2">80/20 Intensity Distribution</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed">~80% at easy pace, 20% hard. Only 1–2 quality sessions per week — the rest is volume.</p>
+          <div class="flex items-baseline gap-2 mt-5 pt-4 border-t border-border">
+            <span class="font-display font-800 text-2xl tracking-tight text-primary"><span class="counter" data-target="80" data-suffix="%" data-duration="1100">0</span></span>
+            <span class="font-mono text-[0.55rem] text-muted-foreground uppercase tracking-wider">easy zone running</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       HR ZONES
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="zones">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">02</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Heart Rate Zones</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">Train by Effort,<br/>Not by Pace</h2>
+        <p class="text-muted-foreground mt-4 max-w-xl leading-relaxed">HR zones ensure proper intensity. Your max HR of ~156 bpm calibrates these precisely.</p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="view-reveal space-y-4" id="zoneBars">
+          <div class="flex items-center gap-4"><div class="w-20 shrink-0"><span class="font-mono text-xs text-muted-foreground uppercase tracking-wider">Zone 1</span></div><div class="flex-1 h-9 bg-secondary rounded-sm overflow-hidden"><div class="zone-fill h-full rounded-sm bg-zone1" style="--w:35%"></div></div><div class="w-24 text-right font-mono text-xs text-muted-foreground">&lt;94 bpm</div></div>
+          <div class="flex items-center gap-4"><div class="w-20 shrink-0"><span class="font-mono text-xs text-muted-foreground uppercase tracking-wider">Zone 2</span></div><div class="flex-1 h-9 bg-secondary rounded-sm overflow-hidden"><div class="zone-fill h-full rounded-sm bg-zone2" style="--w:80%"></div></div><div class="w-24 text-right font-mono text-xs text-muted-foreground">95–110 bpm</div></div>
+          <div class="flex items-center gap-4"><div class="w-20 shrink-0"><span class="font-mono text-xs text-muted-foreground uppercase tracking-wider">Zone 3</span></div><div class="flex-1 h-9 bg-secondary rounded-sm overflow-hidden"><div class="zone-fill h-full rounded-sm bg-zone3" style="--w:58%"></div></div><div class="w-24 text-right font-mono text-xs text-muted-foreground">110–125 bpm</div></div>
+          <div class="flex items-center gap-4"><div class="w-20 shrink-0"><span class="font-mono text-xs text-muted-foreground uppercase tracking-wider">Zone 4</span></div><div class="flex-1 h-9 bg-secondary rounded-sm overflow-hidden"><div class="zone-fill h-full rounded-sm bg-zone4" style="--w:42%"></div></div><div class="w-24 text-right font-mono text-xs text-muted-foreground">125–140 bpm</div></div>
+          <div class="flex items-center gap-4"><div class="w-20 shrink-0"><span class="font-mono text-xs text-muted-foreground uppercase tracking-wider">Zone 5</span></div><div class="flex-1 h-9 bg-secondary rounded-sm overflow-hidden"><div class="zone-fill h-full rounded-sm bg-zone5" style="--w:22%"></div></div><div class="w-24 text-right font-mono text-xs text-muted-foreground">140+ bpm</div></div>
+
+          <div class="gradient-border mt-6 rounded-lg">
+            <div class="p-5 rounded-lg bg-card">
+              <div class="flex items-center gap-2 mb-2"><i data-lucide="crosshair" class="w-4 h-4 text-primary"></i><span class="font-mono text-[0.6rem] tracking-[0.15em] uppercase text-primary">Marathon Pace Target</span></div>
+              <div class="font-display font-700 text-xl tracking-tight">~<span class="counter" data-target="125" data-suffix="–132" data-duration="1200">0</span> bpm</div>
+              <div class="text-sm text-muted-foreground mt-1">Upper Zone 3 / Low Zone 4 — 80–85% HRmax</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-reveal rounded-lg border border-border bg-card overflow-hidden">
+          <div class="p-5 border-b border-border flex items-center gap-2">
+            <i data-lucide="book-open" class="w-4 h-4 text-muted-foreground"></i>
+            <h3 class="font-display font-700 text-base">Zone Purpose Guide</h3>
+          </div>
+          <div class="divide-y divide-border">
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-zone2"></div><span class="font-mono text-[0.6rem] tracking-wider uppercase text-zone2">Zone 2 — Easy / Aerobic Base</span></div>
+              <p class="text-sm text-muted-foreground leading-relaxed">The backbone. Conversational pace builds capillaries, mitochondria, and fat-burning. 80% of your running lives here.</p>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-zone3"></div><span class="font-mono text-[0.6rem] tracking-wider uppercase text-zone3">Zone 3 — Tempo / Threshold</span></div>
+              <p class="text-sm text-muted-foreground leading-relaxed">"Comfortably hard." Builds lactate threshold. One tempo/week can raise threshold ~10%. Marathon pace lives here.</p>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-zone4"></div><span class="font-mono text-[0.6rem] tracking-wider uppercase text-zone4">Zone 4–5 — Intervals / VO2max</span></div>
+              <p class="text-sm text-muted-foreground leading-relaxed">Short, sharp repeats (400m–1200m) for speed and aerobic power. One session/week in Build/Peak only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       MILEAGE CHART
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="mileage">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">03</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Volume Progression</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">The Mileage Ramp</h2>
+        <p class="text-muted-foreground mt-4 max-w-xl leading-relaxed">From 10 to 30 miles/week. Every increase respects the 10% rule. Deload weeks prevent overreaching.</p>
+      </div>
+
+      <div class="view-scale rounded-lg border border-border bg-card p-6 overflow-x-auto">
+        <div id="mileageChart" class="flex items-end gap-1.5 h-56 min-w-[620px] pb-8 relative">
+          <div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-8">
+            <div class="border-b border-border/30 relative"><span class="absolute -top-3 -left-1 font-mono text-[0.5rem] text-muted-foreground/40">30</span></div>
+            <div class="border-b border-border/30 relative"><span class="absolute -top-3 -left-1 font-mono text-[0.5rem] text-muted-foreground/40">20</span></div>
+            <div class="border-b border-border/30 relative"><span class="absolute -top-3 -left-1 font-mono text-[0.5rem] text-muted-foreground/40">10</span></div>
+            <div class="border-b border-border/30"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-5 mt-4 flex-wrap">
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-base"></div><span class="font-mono text-[0.55rem] text-muted-foreground">Base</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-build"></div><span class="font-mono text-[0.55rem] text-muted-foreground">Build</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-peak"></div><span class="font-mono text-[0.55rem] text-muted-foreground">Peak</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-taper"></div><span class="font-mono text-[0.55rem] text-muted-foreground">Taper</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PHASES TIMELINE
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="phases">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">04</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Training Phases</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">The Four Acts</h2>
+        <p class="text-muted-foreground mt-4 max-w-xl leading-relaxed">Periodized progression from base to race-day sharpening.</p>
+      </div>
+
+      <div class="relative pl-10 md:pl-12">
+        <!-- Animated timeline line that draws on scroll -->
+        <div class="absolute left-4 md:left-5 top-0 bottom-0 w-px bg-border">
+          <div class="timeline-draw absolute left-0 top-0 w-full" style="background:linear-gradient(to bottom,#4ade80 0%,#4ade80 25%,#facc15 25%,#facc15 55%,#fb923c 55%,#fb923c 80%,#c084fc 80%,#c084fc 100%)"></div>
+        </div>
+
+        <!-- BASE -->
+        <div class="view-reveal relative mb-16">
+          <div class="absolute left-[-2.13rem] md:left-[-1.88rem] top-1 w-3.5 h-3.5 rounded-full bg-base border-2 border-background shadow-[0_0_16px_rgba(74,222,128,0.4)]"></div>
+          <div class="flex items-center gap-3 flex-wrap mb-3">
+            <h3 class="font-display font-700 text-xl text-base tracking-tight">Base Phase</h3>
+            <span class="badge bg-base/10 text-base border-base/20">Weeks 1–6</span>
+          </div>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-5 max-w-2xl">Build consistency. Ramp from ~10 to ~20 mi/week. 80–90% at conversational pace. One tempo per week.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border">
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="footprints" class="w-3 h-3"></i>Runs/wk</div><div class="font-display font-700 text-lg">4</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="route" class="w-3 h-3"></i>Long Run</div><div class="font-display font-700 text-lg">6.5→12 mi</div><div class="text-[0.65rem] text-muted-foreground">Zone 2 only</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="flame" class="w-3 h-3"></i>Quality</div><div class="font-display font-700 text-lg">1x Tempo</div><div class="text-[0.65rem] text-muted-foreground">3x8→20 min</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="dumbbell" class="w-3 h-3"></i>Strength</div><div class="font-display font-700 text-lg">2–3x/wk</div></div>
+          </div>
+        </div>
+
+        <!-- BUILD -->
+        <div class="view-reveal relative mb-16">
+          <div class="absolute left-[-2.13rem] md:left-[-1.88rem] top-1 w-3.5 h-3.5 rounded-full bg-build border-2 border-background shadow-[0_0_16px_rgba(250,204,21,0.4)]"></div>
+          <div class="flex items-center gap-3 flex-wrap mb-3">
+            <h3 class="font-display font-700 text-xl text-build tracking-tight">Build Phase</h3>
+            <span class="badge bg-build/10 text-build border-build/20">Weeks 7–12</span>
+          </div>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-5 max-w-2xl">Add race-specific intensity. Intervals + marathon-pace segments. Practicing goal pace 8+ weeks out = 23% better odds.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border">
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="footprints" class="w-3 h-3"></i>Runs/wk</div><div class="font-display font-700 text-lg">4–5</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="route" class="w-3 h-3"></i>Long Run</div><div class="font-display font-700 text-lg">12→15 mi</div><div class="text-[0.65rem] text-muted-foreground">+ MP finish</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="flame" class="w-3 h-3"></i>Quality</div><div class="font-display font-700 text-lg">2x/wk</div><div class="text-[0.65rem] text-muted-foreground">Interval + Tempo</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i>Peak</div><div class="font-display font-700 text-lg">25–28 mi</div></div>
+          </div>
+        </div>
+
+        <!-- PEAK -->
+        <div class="view-reveal relative mb-16">
+          <div class="absolute left-[-2.13rem] md:left-[-1.88rem] top-1 w-3.5 h-3.5 rounded-full bg-peak border-2 border-background shadow-[0_0_16px_rgba(249,115,22,0.4)]"></div>
+          <div class="flex items-center gap-3 flex-wrap mb-3">
+            <h3 class="font-display font-700 text-xl text-peak tracking-tight">Peak Phase</h3>
+            <span class="badge bg-peak/10 text-peak border-peak/20">Weeks 13–15</span>
+          </div>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-5 max-w-2xl">Simulate marathon demands. Highest mileage. Two 16–18 mi long runs with 4–6 mi at marathon pace.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border">
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="footprints" class="w-3 h-3"></i>Runs/wk</div><div class="font-display font-700 text-lg">4–5</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="route" class="w-3 h-3"></i>Long Run</div><div class="font-display font-700 text-lg">16–18 mi</div><div class="text-[0.65rem] text-muted-foreground">4–6 mi MP</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="crosshair" class="w-3 h-3"></i>MP Work</div><div class="font-display font-700 text-lg">6–8 mi</div><div class="text-[0.65rem] text-muted-foreground">Continuous</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i>Peak</div><div class="font-display font-700 text-lg">28–30 mi</div></div>
+          </div>
+        </div>
+
+        <!-- TAPER -->
+        <div class="view-reveal relative">
+          <div class="absolute left-[-2.13rem] md:left-[-1.88rem] top-1 w-3.5 h-3.5 rounded-full bg-taper border-2 border-background shadow-[0_0_16px_rgba(192,132,252,0.4)]"></div>
+          <div class="flex items-center gap-3 flex-wrap mb-3">
+            <h3 class="font-display font-700 text-xl text-taper tracking-tight">Taper</h3>
+            <span class="badge bg-taper/10 text-taper border-taper/20">Week 16 — Jul 19–26</span>
+          </div>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-5 max-w-2xl">Maintain fitness, shed fatigue. Cut 40–50%. Short, sharp efforts. Rest, sleep, nutrition.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border">
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="chevron-down" class="w-3 h-3"></i>Volume</div><div class="font-display font-700 text-lg">~50% cut</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="route" class="w-3 h-3"></i>Long Run</div><div class="font-display font-700 text-lg">5–6 mi</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3"></i>Sharpen</div><div class="font-display font-700 text-lg">2x10 MP</div></div>
+            <div class="bg-card p-4"><div class="font-mono text-[0.5rem] tracking-wider uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><i data-lucide="bed" class="w-3 h-3"></i>Rest</div><div class="font-display font-700 text-lg">2+/wk</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       SAMPLE WEEK — HORIZONTAL SCROLL
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="sample">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">05</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Sample Microcycle</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">A Week in the Build</h2>
+        <p class="text-muted-foreground mt-4 max-w-xl leading-relaxed">Week 9 — ~21 miles. Swipe to explore each day.</p>
+      </div>
+
+      <!-- Horizontal scrolling cards -->
+      <div class="view-scale">
+        <div class="h-scroll gap-3 pb-4 -mx-6 px-6">
+          <div class="w-[220px] rounded-lg border border-border bg-card p-5 flex flex-col min-h-[210px] hover:bg-secondary/50 transition-colors">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Mon</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="wind" class="w-4 h-4 text-zone2"></i><span class="font-display font-700 text-sm text-zone2">Easy Run</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">Zone 2 aerobic + 30 min core work after</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">5 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-border bg-card p-5 flex flex-col min-h-[210px] hover:bg-secondary/50 transition-colors">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Tue</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="zap" class="w-4 h-4 text-zone5"></i><span class="font-display font-700 text-sm text-zone5">Intervals</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">5x800m @ 5K pace (Z4–5) with 2 min jog rest</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">~5 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-border/50 bg-card/50 p-5 flex flex-col min-h-[210px] opacity-50">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Wed</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="moon" class="w-4 h-4 text-muted-foreground"></i><span class="font-display font-700 text-sm text-muted-foreground">Rest / Easy</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">Full rest or easy 3 mi shakeout</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">0–3 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-border bg-card p-5 flex flex-col min-h-[210px] hover:bg-secondary/50 transition-colors">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Thu</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="timer" class="w-4 h-4 text-zone3"></i><span class="font-display font-700 text-sm text-zone3">Tempo Run</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">2x12 min @ threshold (Z3–4) with 3 min jog</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">~6 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-border bg-card p-5 flex flex-col min-h-[210px] hover:bg-secondary/50 transition-colors">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Fri</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="dumbbell" class="w-4 h-4 text-taper"></i><span class="font-display font-700 text-sm text-taper">Gym + Easy</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">Heavy compounds (squats, DL) + easy 2 mi</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">2 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-primary/20 bg-card p-5 flex flex-col min-h-[210px] hover:bg-secondary/50 transition-colors">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Sat</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400"></i><span class="font-display font-700 text-sm text-sky-400">Long Run</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">Zone 2 for 8 mi, last 2 mi moderate effort</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">10 mi</div>
+          </div>
+          <div class="w-[220px] rounded-lg border border-border/50 bg-card/50 p-5 flex flex-col min-h-[210px] opacity-50">
+            <div class="font-mono text-[0.55rem] tracking-wider uppercase text-muted-foreground mb-3">Sun</div>
+            <div class="flex items-center gap-1.5 mb-2"><i data-lucide="coffee" class="w-4 h-4 text-muted-foreground"></i><span class="font-display font-700 text-sm text-muted-foreground">Recovery</span></div>
+            <p class="text-xs text-muted-foreground leading-relaxed flex-1">Easy 2–3 mi or full rest</p>
+            <div class="font-mono text-xs text-muted-foreground mt-3 pt-2 border-t border-border">0–3 mi</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-3 text-muted-foreground/40">
+          <i data-lucide="arrow-left" class="w-3 h-3"></i>
+          <span class="font-mono text-[0.55rem] tracking-wider">SWIPE TO EXPLORE</span>
+          <i data-lucide="arrow-right" class="w-3 h-3"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       STRENGTH
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="strength">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">06</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Strength Integration</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">Lift Smarter,<br/>Run Faster</h2>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-6">
+        <div data-stagger class="lg:col-span-3 space-y-4">
+          <div class="rounded-lg border border-border bg-card p-5 border-l-2 border-l-primary hover:translate-x-1 transition-transform">
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="weight" class="w-4 h-4 text-primary"></i><h4 class="font-display font-700 text-sm">Heavy & Plyometric over Volume</h4></div>
+            <p class="text-sm text-muted-foreground leading-relaxed">3x5 heavy squats, deadlifts, lunges + jump training. Meta-analysis: improves running economy in endurance athletes.</p>
+          </div>
+          <div class="rounded-lg border border-border bg-card p-5 border-l-2 border-l-primary hover:translate-x-1 transition-transform">
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-primary"></i><h4 class="font-display font-700 text-sm">Schedule Around Quality Runs</h4></div>
+            <p class="text-sm text-muted-foreground leading-relaxed">Lift after easy runs or on rest days. Never heavy legs within 24h of intervals or tempos.</p>
+          </div>
+          <div class="rounded-lg border border-border bg-card p-5 border-l-2 border-l-primary hover:translate-x-1 transition-transform">
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="arrow-down-right" class="w-4 h-4 text-primary"></i><h4 class="font-display font-700 text-sm">Taper the Gym Too</h4></div>
+            <p class="text-sm text-muted-foreground leading-relaxed">Base: 2–3x → Build: 2x → Peak: 1–2x lighter → Taper: maintenance or skip.</p>
+          </div>
+        </div>
+
+        <div class="view-reveal lg:col-span-2 rounded-lg border border-border bg-card overflow-hidden h-fit">
+          <div class="p-5 border-b border-border flex items-center gap-2"><i data-lucide="layout-list" class="w-4 h-4 text-muted-foreground"></i><h3 class="font-display font-700 text-sm">Frequency by Phase</h3></div>
+          <div class="divide-y divide-border">
+            <div class="px-5 py-4 flex justify-between items-center wipe-reveal"><span class="font-mono text-xs tracking-wider uppercase text-base">Base</span><span class="font-display font-600">2–3x/wk</span></div>
+            <div class="px-5 py-4 flex justify-between items-center wipe-reveal"><span class="font-mono text-xs tracking-wider uppercase text-build">Build</span><span class="font-display font-600">2x/wk</span></div>
+            <div class="px-5 py-4 flex justify-between items-center wipe-reveal"><span class="font-mono text-xs tracking-wider uppercase text-peak">Peak</span><span class="font-display font-600">1–2x/wk</span></div>
+            <div class="px-5 py-4 flex justify-between items-center wipe-reveal"><span class="font-mono text-xs tracking-wider uppercase text-taper">Taper</span><span class="font-display font-600">0–1x/wk</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       ADAPTIVE RULES
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="rules">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="section-num">07</span>
+          <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          <span class="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted-foreground">Adaptive Rules</span>
+        </div>
+        <h2 class="font-display font-800 tracking-tight leading-none" style="font-size:clamp(2rem,5vw,3.5rem)">Train Smart,<br/>Not Just Hard</h2>
+      </div>
+
+      <div data-stagger class="grid sm:grid-cols-2 gap-4">
+        <div class="card-glow rounded-lg border border-border bg-card p-6">
+          <div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border"><i data-lucide="heart" class="w-5 h-5 text-zone5"></i></div>
+          <h3 class="font-display font-700 text-base mb-2">HRV-Guided Intensity</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-4">Check readiness daily. Hard workouts on high-HRV days. If HRV drops for 2–3 days → easy only.</p>
+          <div class="rounded-md bg-primary/5 border border-primary/10 p-3"><p class="text-xs font-mono text-foreground leading-relaxed"><i data-lucide="arrow-right" class="w-3 h-3 text-primary inline mr-1"></i>Low HRV 2+ days → skip intensity, Zone 2 only</p></div>
+        </div>
+        <div class="card-glow rounded-lg border border-border bg-card p-6">
+          <div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border"><i data-lucide="rotate-ccw" class="w-5 h-5 text-zone3"></i></div>
+          <h3 class="font-display font-700 text-base mb-2">Missed Workout Policy</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-4">Never "make up" missed sessions. Continue as scheduled. Drop easy runs before long runs.</p>
+          <div class="rounded-md bg-primary/5 border border-primary/10 p-3"><p class="text-xs font-mono text-foreground leading-relaxed"><i data-lucide="arrow-right" class="w-3 h-3 text-primary inline mr-1"></i>When in doubt, do less</p></div>
+        </div>
+        <div class="card-glow rounded-lg border border-border bg-card p-6">
+          <div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border"><i data-lucide="arrow-down-to-line" class="w-5 h-5 text-taper"></i></div>
+          <h3 class="font-display font-700 text-base mb-2">Deload Every 3–4 Weeks</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-4">Cut ~20–30%. Shorter runs, skip hard session. This is where fitness actually consolidates.</p>
+          <div class="rounded-md bg-primary/5 border border-primary/10 p-3"><p class="text-xs font-mono text-foreground leading-relaxed"><i data-lucide="arrow-right" class="w-3 h-3 text-primary inline mr-1"></i>Deload weeks = adaptation weeks</p></div>
+        </div>
+        <div class="card-glow rounded-lg border border-border bg-card p-6">
+          <div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border"><i data-lucide="scale" class="w-5 h-5 text-zone2"></i></div>
+          <h3 class="font-display font-700 text-base mb-2">ACWR Sweet Spot</h3>
+          <p class="text-sm text-muted-foreground leading-relaxed mb-4">Keep ratio 0.8–1.3. No jumps over 10%/week. Injury risk spikes with load spikes.</p>
+          <div class="rounded-md bg-primary/5 border border-primary/10 p-3"><p class="text-xs font-mono text-foreground leading-relaxed"><i data-lucide="arrow-right" class="w-3 h-3 text-primary inline mr-1"></i>ACWR ~0.9 = fitness > fatigue</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6"><div class="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       SUMMARY
+       ═══════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32" id="summary">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="view-reveal gradient-border rounded-lg">
+        <div class="p-8 md:p-12 rounded-lg bg-card">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="section-num">08</span>
+            <div class="h-px flex-1 bg-border max-w-[160px]"></div>
+          </div>
+          <h2 class="font-display font-800 tracking-tight leading-none mb-10" style="font-size:clamp(2rem,5vw,3.5rem)">The Protocol</h2>
+          <div data-stagger class="grid md:grid-cols-2 gap-6">
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">01</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">Volume first.</strong> 10→30 mi/wk. No >10% jumps. Long run ≤30% total.</p></div>
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">02</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">80/20 rule.</strong> Most running Zone 2. 1–2 quality sessions/week.</p></div>
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">03</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">Practice race pace.</strong> MP work 8+ weeks out = 23% better success.</p></div>
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">04</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">Strength supports.</strong> 2–3x/wk heavy compounds + plyos on easy days.</p></div>
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">05</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">Adapt to body.</strong> HRV guides intensity. Deload 3–4 weeks. ACWR 0.8–1.3.</p></div>
+            <div class="flex gap-4"><span class="font-display font-800 text-3xl text-primary/20 leading-none shrink-0">06</span><p class="text-sm text-muted-foreground leading-relaxed"><strong class="text-foreground">Taper sharp.</strong> Cut 50%. Short efforts. Sleep + nutrition into race day.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="border-t border-border py-8">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3"><i data-lucide="activity" class="w-4 h-4 text-primary"></i><span class="font-mono text-xs tracking-wider text-muted-foreground">Evidence-based <span class="text-primary">//</span> Jul 26, 2026</span></div>
+      <a href="#top" class="flex items-center gap-1.5 font-mono text-xs tracking-wider text-muted-foreground hover:text-foreground transition-colors">Top <i data-lucide="arrow-up" class="w-3 h-3"></i></a>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════════════ -->
+  <script>
+    lucide.createIcons();
+
+    // ── HERO TEXT SPLIT ANIMATION ──
+    // Characters fly in with 3D rotation
+    const heroTime = document.getElementById('heroTime');
+    const heroSub = document.getElementById('heroSub');
+    const timeText = '3:45';
+    const subText = '16-Week Training Plan — Built on Science, Driven by Data';
+
+    // Split "3:45" into individual characters
+    timeText.split('').forEach((char, i) => {
+      const span = document.createElement('span');
+      span.className = 'char-reveal';
+      span.style.animationDelay = `${0.3 + i * 0.12}s`;
+      span.textContent = char;
+      heroTime.appendChild(span);
+    });
+    // Underline
+    const underline = document.createElement('span');
+    underline.className = 'absolute bottom-[0.05em] left-0 right-0 h-[0.06em] bg-primary/25 rounded-full';
+    heroTime.appendChild(underline);
+
+    // Sub text - word by word
+    subText.split(' ').forEach((word, i) => {
+      const span = document.createElement('span');
+      span.className = 'char-reveal inline-block mr-[0.35em]';
+      span.style.animationDelay = `${0.8 + i * 0.05}s`;
+      span.textContent = word;
+      heroSub.appendChild(span);
+    });
+
+    // ── COUNTER ANIMATIONS ──
+    // Numbers count up when they enter the viewport
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting || entry.target.dataset.counted) return;
+        entry.target.dataset.counted = 'true';
+        const el = entry.target;
+        const target = parseFloat(el.dataset.target);
+        const suffix = el.dataset.suffix || '';
+        const decimals = parseInt(el.dataset.decimals || '0');
+        const duration = parseInt(el.dataset.duration || '1200');
+        const start = performance.now();
+
+        function update(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease out quint
+          const eased = 1 - Math.pow(1 - progress, 5);
+          const current = target * eased;
+          el.textContent = (decimals > 0 ? current.toFixed(decimals) : Math.round(current)) + suffix;
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+
+    // ── STAGGER REVEAL (JS fallback + stagger) ──
+    const staggerObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+    document.querySelectorAll('[data-stagger]').forEach(el => staggerObserver.observe(el));
+
+    // Fallback reveal for browsers without animation-timeline: view()
+    if (!CSS.supports('animation-timeline', 'view()')) {
+      const fallbackObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.08 });
+      document.querySelectorAll('[data-reveal]').forEach(el => fallbackObs.observe(el));
+    }
+
+    // ── ZONE BAR ANIMATION ──
+    const zoneObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('.zone-fill').forEach((bar, i) => {
+            setTimeout(() => bar.classList.add('animated'), i * 130);
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+    document.getElementById('zoneBars') && zoneObs.observe(document.getElementById('zoneBars'));
+
+    // ── MILEAGE CHART ──
+    const weekData = [
+      { w:1,mi:10,p:'base' },{w:2,mi:11,p:'base'},{w:3,mi:13,p:'base'},{w:4,mi:10,p:'base',d:1},
+      {w:5,mi:14,p:'base'},{w:6,mi:17,p:'base'},{w:7,mi:17,p:'build'},{w:8,mi:19,p:'build'},
+      {w:9,mi:21,p:'build'},{w:10,mi:16,p:'build',d:1},{w:11,mi:23,p:'build'},{w:12,mi:26,p:'build'},
+      {w:13,mi:28,p:'peak'},{w:14,mi:30,p:'peak'},{w:15,mi:28,p:'peak'},{w:16,mi:20,p:'taper'},
+    ];
+    const maxMi = 30;
+    const chart = document.getElementById('mileageChart');
+    const pc = { base:'#4ade80', build:'#facc15', peak:'#fb923c', taper:'#c084fc' };
+
+    weekData.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'flex-1 h-full flex flex-col items-center justify-end relative z-10';
+      const val = document.createElement('div');
+      val.className = 'font-mono text-[0.6rem] text-muted-foreground mb-1';
+      val.textContent = d.mi;
+      const bar = document.createElement('div');
+      bar.className = 'chart-col w-full max-w-[36px] rounded-t-sm';
+      bar.style.cssText = `--h:${(d.mi/maxMi)*100}%;background:${pc[d.p]};opacity:${d.d?0.3:1}`;
+      const lbl = document.createElement('div');
+      lbl.className = 'font-mono text-[0.5rem] text-muted-foreground/50 mt-1 absolute -bottom-6';
+      lbl.textContent = `W${d.w}`;
+      col.append(val, bar, lbl);
+      chart.appendChild(col);
+    });
+
+    const chartObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.querySelectorAll('.chart-col').forEach((b,i) => {
+          setTimeout(() => b.classList.add('animated'), i * 65);
+        });
+      });
+    }, { threshold: 0.2 });
+    chartObs.observe(chart);
+
+    // ── CARD GLOW ──
+    document.querySelectorAll('.card-glow').forEach(c => {
+      c.addEventListener('mousemove', e => {
+        const r = c.getBoundingClientRect();
+        c.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        c.style.setProperty('--my', `${e.clientY - r.top}px`);
+      });
+    });
+
+    // ── NAV AUTO-HIDE ──
+    let lastY = 0;
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      nav.style.transform = (y > lastY && y > 80) ? 'translateY(-100%)' : 'translateY(0)';
+      lastY = y;
+    }, { passive: true });
+
+    // ═══════════════════════════════════════════
+    // READING MODE
+    // ═══════════════════════════════════════════
+
+    const chapterNames = {
+      assessment: 'Chapter 1 — Athlete Assessment',
+      zones: 'Chapter 2 — Heart Rate Zones',
+      mileage: 'Chapter 3 — Volume Progression',
+      phases: 'Chapter 4 — Training Phases',
+      sample: 'Chapter 5 — Sample Microcycle',
+      strength: 'Chapter 6 — Strength Integration',
+      rules: 'Chapter 7 — Adaptive Rules',
+      summary: 'Chapter 8 — The Protocol',
+    };
+
+    function toggleReadingMode() {
+      const body = document.body;
+      const isReader = body.classList.toggle('reader');
+      const label = document.querySelector('.toggle-label');
+      if (label) label.textContent = isReader ? 'Dashboard' : 'Read';
+
+      // Re-init Lucide icons for the newly visible icon
+      lucide.createIcons();
+
+      // Smooth scroll to top on mode switch
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Save preference
+      localStorage.setItem('readingMode', isReader ? '1' : '0');
+    }
+
+    // Restore preference
+    if (localStorage.getItem('readingMode') === '1') {
+      document.body.classList.add('reader');
+      const label = document.querySelector('.toggle-label');
+      if (label) label.textContent = 'Dashboard';
+    }
+
+    // Chapter indicator - shows current section in reading mode
+    const chapterEl = document.getElementById('chapterIndicator');
+    const sectionIds = Object.keys(chapterNames);
+    let currentChapter = '';
+    let chapterTimeout;
+
+    const chapterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && document.body.classList.contains('reader')) {
+          const id = entry.target.id;
+          if (chapterNames[id] && chapterNames[id] !== currentChapter) {
+            currentChapter = chapterNames[id];
+            chapterEl.textContent = currentChapter;
+            chapterEl.classList.add('visible');
+            clearTimeout(chapterTimeout);
+            chapterTimeout = setTimeout(() => {
+              chapterEl.classList.remove('visible');
+            }, 2500);
+          }
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) chapterObserver.observe(el);
+    });
+  </script>
+</body>
+</html>
